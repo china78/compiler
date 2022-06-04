@@ -1,15 +1,15 @@
 import { expect } from 'chai';
-import LexicalAnalysis from '../lexicalAnalysis';
+import LexicalAnalysis from '../src/LexicalAnalysis';
 
-describe('测试一条普通的js语句', () => {
-  const code = `
-    let a = 1;
-    let b = 2.5;
-    const c = a + b;
-  `
-  const lexer = new LexicalAnalysis(code);
-  lexer.run()
-  console.log(lexer.tokenList)
-  console.log(lexer.identifier)
-  console.log(lexer.errorList)
+describe('测试LexicalAnalysis方法', () => {
+  it('测试一条普通js加法运算', () => {
+    const code = `
+      let a = 1;
+      let b = 2.5;
+      const c = a + b;
+    `;
+    const lexer = new LexicalAnalysis(code);
+    console.log('lexer: ', lexer)
+    lexer.run();
+  })
 })

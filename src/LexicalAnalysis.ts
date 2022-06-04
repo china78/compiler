@@ -259,14 +259,19 @@ export default class LexicalAnalysis {
       if (this.isFE(nc)) {
         return this.handleFE(i, whole, nc);
       }
+      // 未完待续..
+      else {
+        return 1
+      }
     }
     // 不能识别的错误语法
+    // 未完待续...
     else {
-
+        return 1
     }
   }
 
-  addToken(token: Partial<Token>) {
+  addToken(token: Omit<Token, 'row'>) {
     const { text, type } = token;
     this.tokenList.push({
       row: this.row,
@@ -275,7 +280,7 @@ export default class LexicalAnalysis {
     })
   }
 
-  addIdentifier(token: Partial<Token>) {
+  addIdentifier(token: Omit<Token, 'row'>) {
     const { text, type } = token;
     this.tokenList.push({
       row: this.row,
@@ -284,7 +289,7 @@ export default class LexicalAnalysis {
     })
   }
 
-  addError(error: Partial<Token>) {
+  addError(error: Omit<Token, 'row'>) {
     const { text, type } = error;
     this.errorList.push({
       row: this.row,
@@ -387,7 +392,7 @@ export default class LexicalAnalysis {
     // 错误
     else {
       this.addError({
-        text: '',
+        text: whole,
         type: '科学计数法错误'
       })
       return i;
