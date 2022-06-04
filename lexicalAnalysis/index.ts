@@ -242,85 +242,8 @@ export default class LexicalAnalysis {
       return i;
     }
     // 科学计数法
-    else if (nc === 'E' || nc === 'e') {
-      // 有 + - 号 1e+2、 1e-3
-      if ((this.code.charAt(i + 1) === LexicalAnalysis.PLUS) || (this.code.charAt(i + 1) === LexicalAnalysis.DASH)) {
-        // 1e
-        whole += nc;
-        // +
-        nc = this.code.charAt(++i)
-        // 1e+
-        whole += nc;
-        // 2
-        nc = this.code.charAt(++i)
-        // 如果后续是数字，一直加
-        while(this.isNumber(nc)) {
-          // 1e+2
-          whole += nc;
-          nc = this.code.charAt(++i)
-        }
-        // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
-        if (
-          nc === LexicalAnalysis.CO || 
-          nc === LexicalAnalysis.SEMI || 
-          nc === LexicalAnalysis.EOF || 
-          nc === LexicalAnalysis.CR || 
-          nc === LexicalAnalysis.HR || 
-          nc === LexicalAnalysis.SPA
-        ) {
-          this.addIdentifier({
-            text: whole,
-            type: '科学计数'
-          })
-          return i;
-        } else {
-          this.addIdentifier({
-            text: whole,
-            type: '浮点数错误'
-          })
-          return i;
-        }
-      }
-      // 1e2
-      else if (this.isNumber(this.code.charAt(i + 1))) {
-        // 1e
-        whole += nc;
-        // 2
-        nc = this.code.charAt(++i);
-        while(this.isNumber(nc)) {
-          whole += nc;
-          nc = this.code.charAt(++i);
-        }
-        // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
-        if (
-          nc === LexicalAnalysis.CO || 
-          nc === LexicalAnalysis.SEMI || 
-          nc === LexicalAnalysis.EOF || 
-          nc === LexicalAnalysis.CR || 
-          nc === LexicalAnalysis.HR || 
-          nc === LexicalAnalysis.SPA
-        ) {
-          this.addIdentifier({
-            text: whole,
-            type: '科学计数'
-          })
-          return i;
-        } else {
-          this.addIdentifier({
-            text: whole,
-            type: '浮点数错误'
-          })
-          return i;
-        }
-      }
-      // 错误
-      else {
-        this.addError({
-          text: '',
-          type: '科学计数法错误'
-        })
-        return i;
-      }
+    else if (this.isFE(nc)) {
+      return this.handleFE(i, whole, nc);
     }
     // 浮点数
     else if ((this.code.charAt(i) === LexicalAnalysis.PO) && this.isNumber(this.code.charAt(i+1))) {
@@ -330,6 +253,11 @@ export default class LexicalAnalysis {
       while(this.isNumber(nc)) {
         whole += nc;
         nc = this.code.charAt(++i);
+      }
+      // 3.14E10 如果遇到科学计数法
+      // 科学计数法
+      if (this.isFE(nc)) {
+        return this.handleFE(i, whole, nc);
       }
     }
     // 不能识别的错误语法
@@ -372,6 +300,99 @@ export default class LexicalAnalysis {
     return LexicalAnalysis.KEYWORDS.includes(str);
   }
 
+  /**
+   * 是否是科学计数法
+   */
+  isFE(str: string) {
+    return ((str === 'E') || (str === 'e')) ? true : false
+  }
+
+  /**
+   * 科学计数法
+   */
+  handleFE(index: number, wle: string, nextchar: string) {
+    let i = index;
+    let whole = wle;
+    let nc = nextchar;
+    // 有 + - 号 1e+2、 1e-3
+    if ((this.code.charAt(i + 1) === LexicalAnalysis.PLUS) || (this.code.charAt(i + 1) === LexicalAnalysis.DASH)) {
+      // 1e
+      whole += nc;
+      // +
+      nc = this.code.charAt(++i)
+      // 1e+
+      whole += nc;
+      // 2
+      nc = this.code.charAt(++i)
+      // 如果后续是数字，一直加
+      while(this.isNumber(nc)) {
+        // 1e+2
+        whole += nc;
+        nc = this.code.charAt(++i)
+      }
+      // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
+      if (
+        nc === LexicalAnalysis.CO || 
+        nc === LexicalAnalysis.SEMI || 
+        nc === LexicalAnalysis.EOF || 
+        nc === LexicalAnalysis.CR || 
+        nc === LexicalAnalysis.HR || 
+        nc === LexicalAnalysis.SPA
+      ) {
+        this.addIdentifier({
+          text: whole,
+          type: '科学计数'
+        })
+        return i;
+      } else {
+        this.addIdentifier({
+          text: whole,
+          type: '浮点数错误'
+        })
+        return i;
+      }
+    }
+    // 1e2
+    else if (this.isNumber(this.code.charAt(i + 1))) {
+      // 1e
+      whole += nc;
+      // 2
+      nc = this.code.charAt(++i);
+      while(this.isNumber(nc)) {
+        whole += nc;
+        nc = this.code.charAt(++i);
+      }
+      // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
+      if (
+        nc === LexicalAnalysis.CO || 
+        nc === LexicalAnalysis.SEMI || 
+        nc === LexicalAnalysis.EOF || 
+        nc === LexicalAnalysis.CR || 
+        nc === LexicalAnalysis.HR || 
+        nc === LexicalAnalysis.SPA
+      ) {
+        this.addIdentifier({
+          text: whole,
+          type: '科学计数'
+        })
+        return i;
+      } else {
+        this.addIdentifier({
+          text: whole,
+          type: '浮点数错误'
+        })
+        return i;
+      }
+    }
+    // 错误
+    else {
+      this.addError({
+        text: '',
+        type: '科学计数法错误'
+      })
+      return i;
+    }
+  }
 
 
 }
