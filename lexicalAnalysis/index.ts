@@ -16,6 +16,7 @@ export default class LexicalAnalysis {
   private static readonly DQ: string = '"';
   private static readonly SQ: string = '\'';
   private static readonly ESCAPE: string = '`';
+  private static readonly COL: string = ':';
   // 双界符
   private static readonly LSB: string = '[';
   private static readonly RSB: string = ']';
@@ -144,29 +145,209 @@ export default class LexicalAnalysis {
           type: '双界符'
         })
         return ++i;
+      // 单界符 , . ; :
+      case LexicalAnalysis.CO || LexicalAnalysis.PO || LexicalAnalysis.SEMI || LexicalAnalysis.COL:
+        this.addIdentifier({
+          text: cc,
+          type: '单界符'
+        })
+        return ++i;
+      // 转译符 \
+      case '\\':
+        let nc = this.code.charAt(i+1)
+        if (nc === 'n' || nc === 't' || nc === 'r') {
+          this.addIdentifier({
+            text: cc + nc,
+            type: '转译字符'
+          })
+          return i + 2
+        }
       default: 
         this.addError({
-
+          text: cc,
+          type: '暂时无法识别的标识符'
         })
         return ++i;
     }
   }
 
   /**
-   * 以
+   * 以字母开头
    */
-  beginLetter(i:number, cc: string) {
-
+  beginLetter(index:number, cc: string) {
+    let i = index;
+    // 拼接
+    let whole = cc;
+    let nc = this.code.charAt(++i)
+    // 只要是字母或者数字就一直在里面转
+    while(this.isLetter(nc) || this.isNumber(nc)) {
+      whole += nc;
+      nc = this.code.charAt(++i)
+    }
+    // 单个字符
+    if(whole.length === 1) {
+      this.addIdentifier({
+        text: whole,
+        type: '字符常数'
+      })
+      return i;
+    }
+    // 关键字
+    if (this.isKeywords(whole)) {
+      this.addToken({
+        text: whole,
+        type: '关键字'
+      })
+      return i;
+    }
+    // 标识符
+    this.addIdentifier({
+      text: whole,
+      type: '普通标识符'
+    })
+    return i;
   }
 
   /**
    * 以数字开头
    */
-  beginNumber(i:number, cc: string) {
+  beginNumber(index:number, cc: string) {
+    let whole = cc;
+    let i = index;
+    let nc = this.code.charAt(++i);
+    // 如果后续是数字，拼接起来
+    while(this.isNumber(nc)) {
+      whole += nc
+      nc = this.code.charAt(++i)
+    }
+    // 如果遇到一些结束符号 ' ' \n ; , \r \t，就输出结束
+    // 如果遇到一些运算符符号 + - * / %，就输出结束
+    if (
+      nc === LexicalAnalysis.CO || 
+      nc === LexicalAnalysis.SEMI || 
+      nc === LexicalAnalysis.EOF || 
+      nc === LexicalAnalysis.CR || 
+      nc === LexicalAnalysis.HR || 
+      nc === LexicalAnalysis.SPA || 
+      nc === LexicalAnalysis.PLUS || 
+      nc === LexicalAnalysis.DASH || 
+      nc === LexicalAnalysis.STAR || 
+      nc === LexicalAnalysis.FS || 
+      nc === LexicalAnalysis.PS
+    ) {
+      this.addIdentifier({
+        text: whole,
+        type: '整数'
+      })
+      return i;
+    }
+    // 科学计数法
+    else if (nc === 'E' || nc === 'e') {
+      // 有 + - 号 1e+2、 1e-3
+      if ((this.code.charAt(i + 1) === LexicalAnalysis.PLUS) || (this.code.charAt(i + 1) === LexicalAnalysis.DASH)) {
+        // 1e
+        whole += nc;
+        // +
+        nc = this.code.charAt(++i)
+        // 1e+
+        whole += nc;
+        // 2
+        nc = this.code.charAt(++i)
+        // 如果后续是数字，一直加
+        while(this.isNumber(nc)) {
+          // 1e+2
+          whole += nc;
+          nc = this.code.charAt(++i)
+        }
+        // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
+        if (
+          nc === LexicalAnalysis.CO || 
+          nc === LexicalAnalysis.SEMI || 
+          nc === LexicalAnalysis.EOF || 
+          nc === LexicalAnalysis.CR || 
+          nc === LexicalAnalysis.HR || 
+          nc === LexicalAnalysis.SPA
+        ) {
+          this.addIdentifier({
+            text: whole,
+            type: '科学计数'
+          })
+          return i;
+        } else {
+          this.addIdentifier({
+            text: whole,
+            type: '浮点数错误'
+          })
+          return i;
+        }
+      }
+      // 1e2
+      else if (this.isNumber(this.code.charAt(i + 1))) {
+        // 1e
+        whole += nc;
+        // 2
+        nc = this.code.charAt(++i);
+        while(this.isNumber(nc)) {
+          whole += nc;
+          nc = this.code.charAt(++i);
+        }
+        // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
+        if (
+          nc === LexicalAnalysis.CO || 
+          nc === LexicalAnalysis.SEMI || 
+          nc === LexicalAnalysis.EOF || 
+          nc === LexicalAnalysis.CR || 
+          nc === LexicalAnalysis.HR || 
+          nc === LexicalAnalysis.SPA
+        ) {
+          this.addIdentifier({
+            text: whole,
+            type: '科学计数'
+          })
+          return i;
+        } else {
+          this.addIdentifier({
+            text: whole,
+            type: '浮点数错误'
+          })
+          return i;
+        }
+      }
+      // 错误
+      else {
+        this.addError({
+          text: '',
+          type: '科学计数法错误'
+        })
+        return i;
+      }
+    }
+    // 浮点数
+    else if ((this.code.charAt(i) === LexicalAnalysis.PO) && this.isNumber(this.code.charAt(i+1))) {
+      whole += LexicalAnalysis.PO;
+      let nc = this.code.charAt(++i)
+      // 如果.之后有很多位，都抓出来 3.1415926
+      while(this.isNumber(nc)) {
+        whole += nc;
+        nc = this.code.charAt(++i);
+      }
+    }
+    // 不能识别的错误语法
+    else {
 
+    }
   }
 
   addToken(token: Partial<Token>) {
+    const { text, type } = token;
+    this.tokenList.push({
+      row: this.row,
+      text,
+      type
+    })
+  }
+
+  addIdentifier(token: Partial<Token>) {
     const { text, type } = token;
     this.tokenList.push({
       row: this.row,
@@ -184,7 +365,12 @@ export default class LexicalAnalysis {
     })
   }
 
-
+  /**
+   * 是否是关键字
+   */
+  isKeywords(str: string) {
+    return LexicalAnalysis.KEYWORDS.includes(str);
+  }
 
 
 
