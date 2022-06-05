@@ -52,7 +52,7 @@ export default class LexicalAnalysis {
   identifier: Token[];
   errorList: Token[];
   constructor(code:string) {
-    this.code = code + LexicalAnalysis.SEMI;
+    this.code = code;
     this.row = 1;
     this.tokenList = []
     this.identifier = []
