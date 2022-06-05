@@ -73,18 +73,22 @@ export default class LexicalAnalysis {
     while(i < code.length) {
       cc = code.charAt(i);
       i = this.preInspection(cc, i)
+      console.log(i)
     }
   }
 
   /**
    * 对空字符串、换行预检
    */
-  preInspection(cc: string, i:number) {
+  preInspection(cc: string, index:number) {
+    let i = index
     if (cc === LexicalAnalysis.SPA) {
-      return i++
+      i = ++index
+      return i
     } else if (cc === '\n') {
       this.row++;
-      return i++
+      i = ++index
+      return i
     } else {
       return this.meaningfulPart(i, cc)
     }
