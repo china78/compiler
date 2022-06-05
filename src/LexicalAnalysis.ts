@@ -58,7 +58,6 @@ export default class LexicalAnalysis {
     this.identifier = []
     this.errorList = []
   }
-
   run() {
     this.mainProcess()
   }
@@ -137,7 +136,8 @@ export default class LexicalAnalysis {
   /**
    * 非字母、数字
    */
-  nonAlphanumeric(i:number, cc: string) {
+  nonAlphanumeric(index:number, cc: string) {
+    let i = index;
     switch(cc) {
       // 如果是空字符、换行、制表符等 跳过
       case LexicalAnalysis.SPA || LexicalAnalysis.EOF || LexicalAnalysis.CR || LexicalAnalysis.HR:
@@ -165,6 +165,34 @@ export default class LexicalAnalysis {
             type: '转译字符'
           })
           return i + 2
+        }
+      // 运算符 =
+      case LexicalAnalysis.ASS:
+        let ass1 = this.code.charAt(i + 1);
+        let ass2 = this.code.charAt(i + 2)
+        // ==
+        if (ass1 === LexicalAnalysis.ASS) {
+          this.addIdentifier({
+            text: cc + ass1,
+            type: '算数运算符'
+          })
+          return ++i
+        }
+        // ===
+        else if (ass2 === LexicalAnalysis.ASS) {
+          this.addIdentifier({
+            text: cc + ass1 + ass2,
+            type: '算数运算符'
+          })
+          return i+=2
+        }
+        // =
+        else {
+          this.addIdentifier({
+            text: cc,
+            type: '赋值运算符'
+          })
+          return ++i
         }
       default: 
         this.addError({
@@ -286,7 +314,7 @@ export default class LexicalAnalysis {
 
   addIdentifier(token: Omit<Token, 'row'>) {
     const { text, type } = token;
-    this.tokenList.push({
+    this.identifier.push({
       row: this.row,
       text,
       type
