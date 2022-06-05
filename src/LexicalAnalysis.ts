@@ -140,17 +140,28 @@ export default class LexicalAnalysis {
     let i = index;
     switch(cc) {
       // 如果是空字符、换行、制表符等 跳过
-      case LexicalAnalysis.SPA || LexicalAnalysis.EOF || LexicalAnalysis.CR || LexicalAnalysis.HR:
+      case LexicalAnalysis.SPA:
+      case LexicalAnalysis.EOF:
+      case LexicalAnalysis.CR:
+      case LexicalAnalysis.HR:  
         return ++i;
       // 如果是双界符
-      case LexicalAnalysis.LSB || LexicalAnalysis.RRB || LexicalAnalysis.LRB || LexicalAnalysis.RRB || LexicalAnalysis.LBB || LexicalAnalysis.RBB:
+      case LexicalAnalysis.LSB:
+      case LexicalAnalysis.RRB:
+      case LexicalAnalysis.LRB:
+      case LexicalAnalysis.RRB:
+      case LexicalAnalysis.LBB:
+      case LexicalAnalysis.RBB:
         this.addToken({
           text: cc,
           type: '双界符'
         })
         return ++i;
       // 单界符 , . ; :
-      case LexicalAnalysis.CO || LexicalAnalysis.PO || LexicalAnalysis.SEMI || LexicalAnalysis.COL:
+      case LexicalAnalysis.CO:
+      case LexicalAnalysis.PO:
+      case LexicalAnalysis.SEMI:
+      case LexicalAnalysis.COL:
         this.addIdentifier({
           text: cc,
           type: '单界符'
