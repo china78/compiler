@@ -11,8 +11,8 @@
             "999999",
             "--colors",
             "${workspaceFolder}/test",
-            "--require", 
-            "babel-core/register"
+            "--require",
+            "babel-core/register",
         ],
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen"
@@ -26,7 +26,8 @@
           "--timeout",
           "999999",
           "--colors",
-          "--require", 
+          "--require",
+          "ts-node/register",
           "babel-core/register",
           "${file}"
         ],
