@@ -72,7 +72,6 @@ export default class LexicalAnalysis {
     while(i < code.length) {
       cc = code.charAt(i);
       i = this.preInspection(cc, i)
-      console.log(i)
     }
   }
 
@@ -291,7 +290,7 @@ export default class LexicalAnalysis {
     // 浮点数
     else if ((this.code.charAt(i) === LexicalAnalysis.PO) && this.isNumber(this.code.charAt(i+1))) {
       whole += LexicalAnalysis.PO;
-      let nc = this.code.charAt(++i)
+      nc = this.code.charAt(++i)
       // 如果.之后有很多位，都抓出来 3.1415926
       while(this.isNumber(nc)) {
         whole += nc;
@@ -302,7 +301,35 @@ export default class LexicalAnalysis {
       if (this.isFE(nc)) {
         return this.handleFE(i, whole, nc);
       }
-      // 未完待续..
+      // 如果遇到结束符号
+      else if (
+        nc === LexicalAnalysis.CO || 
+        nc === LexicalAnalysis.SEMI || 
+        nc === LexicalAnalysis.EOF || 
+        nc === LexicalAnalysis.CR || 
+        nc === LexicalAnalysis.HR || 
+        nc === LexicalAnalysis.SPA
+      ) {
+        this.addIdentifier({
+          text: whole,
+          type: '浮点数'
+        })
+        return i;
+      }
+      // 如果遇到运算符
+      else if (
+        nc === LexicalAnalysis.PLUS || 
+        nc === LexicalAnalysis.DASH || 
+        nc === LexicalAnalysis.STAR || 
+        nc === LexicalAnalysis.FS || 
+        nc === LexicalAnalysis.PS
+      ) {
+        this.addIdentifier({
+          text: whole,
+          type: '浮点数'
+        })
+        return i;
+      }
       else {
         return 1
       }

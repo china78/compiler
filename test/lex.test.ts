@@ -8,12 +8,12 @@ describe('测试LexicalAnalysis方法', () => {
     lexer.run();
     console.log('lexer: ', lexer)
   })
-  // it('测试小数2.5', () => {
-  //   const code = `let b = 2.5;`;
-  //   const lexer = new LexicalAnalysis(code);
-  //   console.log('lexer: ', lexer)
-  //   lexer.run();
-  // })
+  it('测试小数2.5', () => {
+    const code = `let b = 2.5;`;
+    const lexer = new LexicalAnalysis(code);
+    lexer.run();
+    console.log('lexer: ', lexer)
+  })
   // it('赋值运算符 = 的测试', () => {
   //   const code = `=`;
   //   const lexer = new LexicalAnalysis(code);
