@@ -137,6 +137,7 @@ export default class LexicalAnalysis {
    */
   nonAlphanumeric(index:number, cc: string) {
     let i = index;
+    let nc = this.code.charAt(i+1)
     switch(cc) {
       // 如果是空字符、换行、制表符等 跳过
       case LexicalAnalysis.SPA:
@@ -168,7 +169,6 @@ export default class LexicalAnalysis {
         return ++i;
       // 转译符 \
       case '\\':
-        let nc = this.code.charAt(i+1)
         if (nc === 'n' || nc === 't' || nc === 'r') {
           this.addIdentifier({
             text: cc + nc,
@@ -178,31 +178,52 @@ export default class LexicalAnalysis {
         }
       // 运算符 =
       case LexicalAnalysis.ASS:
-        let ass1 = this.code.charAt(i + 1);
-        let ass2 = this.code.charAt(i + 2)
-        // ==
-        if (ass1 === LexicalAnalysis.ASS) {
-          this.addIdentifier({
-            text: cc + ass1,
-            type: '算数运算符'
-          })
-          return ++i
+        let whole = cc;
+        nc = this.code.charAt(++i)
+        while(nc === LexicalAnalysis.ASS) {
+          whole += nc;
+          nc = this.code.charAt(++i);
         }
-        // ===
-        else if (ass2 === LexicalAnalysis.ASS) {
-          this.addIdentifier({
-            text: cc + ass1 + ass2,
-            type: '算数运算符'
-          })
-          return i+=2
+        // =下一个不是=了，判断是不是结束了
+        if (
+          nc === LexicalAnalysis.SPA ||
+          nc === LexicalAnalysis.EOF ||
+          nc === LexicalAnalysis.CR ||
+          nc === LexicalAnalysis.HR ||
+          nc === ''
+        ) {
+          // =
+          if (whole.length === 1) {
+            this.addIdentifier({
+              text: whole,
+              type: '赋值运算符'
+            })
+            return i;
+          }
+          // ==
+          if (whole.length === 2) {
+            this.addIdentifier({
+              text: whole,
+              type: '算数运算符'
+            })
+            return i;
+          }
+          // === 
+          if (whole.length === 3) {
+            this.addIdentifier({
+              text: whole,
+              type: '算数运算符'
+            })
+            return i;
+          }        
         }
-        // =
+        // 可能是错误字符
         else {
-          this.addIdentifier({
+          this.addError({
             text: cc,
-            type: '赋值运算符'
+            type: '暂时无法识别的标识符'
           })
-          return ++i
+          return ++i;
         }
       default: 
         this.addError({
