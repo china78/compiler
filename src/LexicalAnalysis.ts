@@ -162,7 +162,7 @@ export default class LexicalAnalysis {
       case LexicalAnalysis.PO:
       case LexicalAnalysis.SEMI:
       case LexicalAnalysis.COL:
-        this.addIdentifier({
+        this.addToken({
           text: cc,
           type: '单界符'
         })
@@ -185,16 +185,10 @@ export default class LexicalAnalysis {
           nc = this.code.charAt(++i);
         }
         // =下一个不是=了，判断是不是结束了
-        if (
-          nc === LexicalAnalysis.SPA ||
-          nc === LexicalAnalysis.EOF ||
-          nc === LexicalAnalysis.CR ||
-          nc === LexicalAnalysis.HR ||
-          nc === ''
-        ) {
+        if (this.isEndCorrelation(nc) || nc === '') {
           // =
           if (whole.length === 1) {
-            this.addIdentifier({
+            this.addToken({
               text: whole,
               type: '赋值运算符'
             })
@@ -202,7 +196,7 @@ export default class LexicalAnalysis {
           }
           // ==
           if (whole.length === 2) {
-            this.addIdentifier({
+            this.addToken({
               text: whole,
               type: '算数运算符'
             })
@@ -210,7 +204,7 @@ export default class LexicalAnalysis {
           }
           // === 
           if (whole.length === 3) {
-            this.addIdentifier({
+            this.addToken({
               text: whole,
               type: '算数运算符'
             })
@@ -286,17 +280,8 @@ export default class LexicalAnalysis {
     // 如果遇到一些结束符号 ' ' \n ; , \r \t，就输出结束
     // 如果遇到一些运算符符号 + - * / %，就输出结束
     if (
-      nc === LexicalAnalysis.CO || 
-      nc === LexicalAnalysis.SEMI || 
-      nc === LexicalAnalysis.EOF || 
-      nc === LexicalAnalysis.CR || 
-      nc === LexicalAnalysis.HR || 
-      nc === LexicalAnalysis.SPA || 
-      nc === LexicalAnalysis.PLUS || 
-      nc === LexicalAnalysis.DASH || 
-      nc === LexicalAnalysis.STAR || 
-      nc === LexicalAnalysis.FS || 
-      nc === LexicalAnalysis.PS
+      this.isEndCorrelation(nc) || 
+      this.isOperatorCorrelation(nc)
     ) {
       this.addIdentifier({
         text: whole,
@@ -323,14 +308,7 @@ export default class LexicalAnalysis {
         return this.handleFE(i, whole, nc);
       }
       // 如果遇到结束符号
-      else if (
-        nc === LexicalAnalysis.CO || 
-        nc === LexicalAnalysis.SEMI || 
-        nc === LexicalAnalysis.EOF || 
-        nc === LexicalAnalysis.CR || 
-        nc === LexicalAnalysis.HR || 
-        nc === LexicalAnalysis.SPA
-      ) {
+      else if (this.isEndCorrelation(nc)) {
         this.addIdentifier({
           text: whole,
           type: '浮点数'
@@ -338,13 +316,7 @@ export default class LexicalAnalysis {
         return i;
       }
       // 如果遇到运算符
-      else if (
-        nc === LexicalAnalysis.PLUS || 
-        nc === LexicalAnalysis.DASH || 
-        nc === LexicalAnalysis.STAR || 
-        nc === LexicalAnalysis.FS || 
-        nc === LexicalAnalysis.PS
-      ) {
+      else if (this.isOperatorCorrelation(nc)) {
         this.addIdentifier({
           text: whole,
           type: '浮点数'
@@ -427,14 +399,7 @@ export default class LexicalAnalysis {
         nc = this.code.charAt(++i)
       }
       // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
-      if (
-        nc === LexicalAnalysis.CO || 
-        nc === LexicalAnalysis.SEMI || 
-        nc === LexicalAnalysis.EOF || 
-        nc === LexicalAnalysis.CR || 
-        nc === LexicalAnalysis.HR || 
-        nc === LexicalAnalysis.SPA
-      ) {
+      if (this.isEndCorrelation(nc)) {
         this.addIdentifier({
           text: whole,
           type: '科学计数'
@@ -459,14 +424,7 @@ export default class LexicalAnalysis {
         nc = this.code.charAt(++i);
       }
       // 此时，nc不是数字了， 那是不是结束了 ' ' , ; \n \r \t
-      if (
-        nc === LexicalAnalysis.CO || 
-        nc === LexicalAnalysis.SEMI || 
-        nc === LexicalAnalysis.EOF || 
-        nc === LexicalAnalysis.CR || 
-        nc === LexicalAnalysis.HR || 
-        nc === LexicalAnalysis.SPA
-      ) {
+      if (this.isEndCorrelation(nc)) {
         this.addIdentifier({
           text: whole,
           type: '科学计数'
@@ -490,5 +448,30 @@ export default class LexicalAnalysis {
     }
   }
 
+  /**
+   *  是否是结束相关 ' ' , ; \n \r \t
+   */
+  isEndCorrelation(str: string) {
+    return (
+      str === LexicalAnalysis.CO || 
+      str === LexicalAnalysis.SEMI || 
+      str === LexicalAnalysis.EOF || 
+      str === LexicalAnalysis.CR || 
+      str === LexicalAnalysis.HR || 
+      str === LexicalAnalysis.SPA
+    ) ? true : false
+  }
 
+  /**
+   * 运算符相关 + - * / %
+   */
+  isOperatorCorrelation(str: string) {
+    return (
+      str === LexicalAnalysis.PLUS || 
+      str === LexicalAnalysis.DASH || 
+      str === LexicalAnalysis.STAR ||
+      str === LexicalAnalysis.FS || 
+      str === LexicalAnalysis.PS
+    ) ? true : false;
+  }
 }
