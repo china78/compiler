@@ -138,6 +138,7 @@ export default class LexicalAnalysis {
   nonAlphanumeric(index:number, cc: string) {
     let i = index;
     let nc = this.code.charAt(i+1)
+    let whole = cc;
     switch(cc) {
       // 如果是空字符、换行、制表符等 跳过
       case LexicalAnalysis.SPA:
@@ -167,6 +168,21 @@ export default class LexicalAnalysis {
           type: '单界符'
         })
         return ++i;
+      // 如果是 ||
+      case LexicalAnalysis.OR:
+        nc = this.code.charAt(++i);
+        while (nc === LexicalAnalysis.OR) {
+          whole += nc;
+          nc = this.code.charAt(++i);
+        }
+        // ||X
+        if (whole === '||') {
+          this.addToken({
+            text: whole,
+            type: '逻辑运算符'
+          })
+          return i
+        }
       // 转译符 \
       case '\\':
         if (nc === 'n' || nc === 't' || nc === 'r') {
@@ -178,7 +194,6 @@ export default class LexicalAnalysis {
         }
       // 运算符 =
       case LexicalAnalysis.ASS:
-        let whole = cc;
         nc = this.code.charAt(++i)
         while(nc === LexicalAnalysis.ASS) {
           whole += nc;
@@ -210,14 +225,6 @@ export default class LexicalAnalysis {
             })
             return i;
           }        
-        }
-        // 可能是错误字符
-        else {
-          this.addError({
-            text: cc,
-            type: '暂时无法识别的标识符'
-          })
-          return ++i;
         }
       default: 
         this.addError({

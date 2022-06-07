@@ -43,4 +43,10 @@ describe('测试LexicalAnalysis方法', () => {
     lexer.run();
     console.log('lexer: ', lexer)
   })
+  it('测试逻辑运算符 ||', () => {
+    const code = `||`;
+    const lexer = new LexicalAnalysis(code);
+    lexer.run();
+    console.log('lexer: ', lexer)
+  })
 })
