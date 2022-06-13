@@ -49,4 +49,25 @@ describe('测试LexicalAnalysis方法', () => {
     lexer.run();
     console.log('lexer: ', lexer)
   })
+  it('综合测试', () => {
+    const code = `
+      if (a == b || c === d) {
+        let e;
+        const f = '1123';
+        e = f
+      }
+    `;
+    const lexer = new LexicalAnalysis(code);
+    lexer.run();
+    console.log('lexer: ', lexer)
+  })
+  it('测试字符串-单引号 \' \"', () => {
+    const code = `
+      const a = '123';
+      const b = "456";
+    `;
+    const lexer = new LexicalAnalysis(code);
+    lexer.run();
+    console.log('lexer: ', lexer)
+  })
 })

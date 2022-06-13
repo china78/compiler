@@ -183,6 +183,10 @@ export default class LexicalAnalysis {
           })
           return i
         }
+      // ' " 字符串界符
+      case '\'':
+      case '\"':
+        return this.handleString(i, cc);
       // 转译符 \
       case '\\':
         if (nc === 'n' || nc === 't' || nc === 'r') {
@@ -481,4 +485,34 @@ export default class LexicalAnalysis {
       str === LexicalAnalysis.PS
     ) ? true : false;
   }
+
+  /**
+   * 字符串处理
+   * @param index
+   * @param str 
+   */
+  handleString(index:number, str:string) {
+    let s = str;
+    let text = this.code
+    let i = index;
+    let ch = text.charAt(++i);
+
+    while (ch != '"' && ch != '\'') {
+      if (ch == '\r' || ch == '\n') {
+          this.row++
+      }
+
+      else if (ch == '\0') {
+        this.addError({ text: s, type: "字符串没有闭合" });
+        return i;
+      }
+      s = s + ch;
+      ch = text.charAt(++i);
+    }
+    s = (s + ch).slice(1, -1);
+    this.addIdentifier({ text: s, type: "字符串" });
+    return ++i;
+  }
+
+
 }
